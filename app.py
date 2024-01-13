@@ -5,6 +5,7 @@ import streamlit as st
 import re
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
+import yfinance as yf
 
 # Loading the trained machine learning model
 pickle_in = open("model.sav", "rb")
@@ -25,10 +26,6 @@ def preprocess_text(tweet):
     tweet = ' '.join([word for word in word_tokens if word not in stop_words])
     return tweet
 
-# Welcome function
-def welcome():
-    return "Welcome All"
-
 # Predicting sentiment function
 def predict_stock_sentiment(tweet):
     tweet = preprocess_text(tweet)
@@ -40,9 +37,15 @@ def predict_stock_sentiment(tweet):
 def map_sentiment(sentiment):
     return sentiment_mapping.get(sentiment, 'Unknown')
 
+# Function to fetch stock data using yfinance
+def get_stock_data(symbol, start_date, end_date):
+    stock_data = yf.download(symbol, start=start_date, end=end_date)
+    return stock_data
+
 # Main Streamlit app function
 def main():
     st.title("ICICI Stock Sentiment Predictor - Group-10 AMPBA Co'24 Summer")
+    
     # HTML styling for the app
     html_temp = """
     <div style="background-color: tomato; padding: 10px;">
@@ -52,17 +55,22 @@ def main():
     st.markdown(html_temp, unsafe_allow_html=True)
 
     # User input for the tweet
-    Stock_Reviews = st.text_input("tweet", "Type here")
+    Stock_Reviews = st.text_input("Tweet", "Type here")
     result = ""
 
     # Predict button click event
-    if st.button("predict"):
+    if st.button("Predict"):
         # Predict sentiment and map to label
         sentiment = predict_stock_sentiment(Stock_Reviews)
         result = map_sentiment(sentiment)
 
     # Displaying the predicted sentiment
     st.success('The sentiment is {}'.format(result))
+
+    # Fetching stock data and displaying the chart
+    st.subheader("ICICI Stock Chart (Last 10 Years)")
+    icici_stock_data = get_stock_data("ICICIBANK.BO", start_date="2012-01-01", end_date="2022-01-01")
+    st.line_chart(icici_stock_data['Close'])
 
 # Running the app
 if __name__ == '__main__':
